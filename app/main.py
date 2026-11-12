@@ -6,6 +6,7 @@ from app.api.estadisticas import (
 )
 from app.api.series import router as series_router
 from app.api.pagos import router as pagos_router
+from app.api.predios import router as predios_router
 from app.config import get_settings
 
 
@@ -31,6 +32,7 @@ app.add_middleware(
 app.include_router(estadisticas_router)
 app.include_router(series_router)
 app.include_router(pagos_router)
+app.include_router(predios_router)
 
 
 @app.get(
@@ -44,4 +46,5 @@ def health_check() -> dict[str, str]:
         "service": "aguas-paraiso-analytics",
         "version": settings.app_version,
     }
+
 
