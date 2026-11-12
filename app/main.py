@@ -1,7 +1,10 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.estadisticas import router as estadisticas_router
+from app.api.estadisticas import (
+    router as estadisticas_router,
+)
+from app.api.series import router as series_router
 from app.config import get_settings
 
 
@@ -25,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(estadisticas_router)
+app.include_router(series_router)
 
 
 @app.get(
