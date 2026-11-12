@@ -1,0 +1,43 @@
+﻿from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.dependencies import get_estadisticas_service
+from app.schemas.estadisticas import ResumenEstadisticas
+from app.services.estadisticas_service import (
+    EstadisticasService,
+)
+
+
+router = APIRouter(
+    prefix="/api/estadisticas",
+    tags=["Estadísticas"],
+)
+
+
+@router.get(
+    "/resumen",
+    response_model=ResumenEstadisticas,
+    summary="Obtener resumen general",
+    description=(
+        "Calcula indicadores generales de suscriptores, predios, "
+        "facturas, pagos, recaudo y cartera pendiente."
+    ),
+)
+def obtener_resumen(
+    service: Annotated[
+        EstadisticasService,
+        Depends(get_estadisticas_service),
+    ],
+) -> ResumenEstadisticas:
+    try:
+        return service.obtener_resumen()
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "No fue posible consultar las estadísticas "
+                "en la base de datos."
+            ),
+        ) from error
