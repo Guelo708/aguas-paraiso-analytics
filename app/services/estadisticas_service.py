@@ -1,7 +1,10 @@
 ﻿from app.repositories.estadisticas_repository import (
     EstadisticasRepository,
 )
-from app.schemas.estadisticas import ResumenEstadisticas
+from app.schemas.estadisticas import (
+    DeudorEstadistica,
+    ResumenEstadisticas,
+)
 
 
 class EstadisticasService:
@@ -15,3 +18,11 @@ class EstadisticasService:
         datos = self._repository.obtener_resumen()
 
         return ResumenEstadisticas.model_validate(datos)
+
+    def obtener_top_deudores(self) -> list[DeudorEstadistica]:
+        resultados = self._repository.obtener_top_deudores()
+
+        return [
+            DeudorEstadistica.model_validate(item)
+            for item in resultados
+        ]

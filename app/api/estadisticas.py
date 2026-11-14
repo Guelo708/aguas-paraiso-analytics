@@ -4,7 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.dependencies import get_estadisticas_service
-from app.schemas.estadisticas import ResumenEstadisticas
+from app.schemas.estadisticas import (
+    DeudorEstadistica,
+    ResumenEstadisticas,
+)
 from app.services.estadisticas_service import (
     EstadisticasService,
 )
@@ -38,6 +41,33 @@ def obtener_resumen(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
                 "No fue posible consultar las estadísticas "
+                "en la base de datos."
+            ),
+        ) from error
+
+
+@router.get(
+    "/cartera/top-deudores",
+    response_model=list[DeudorEstadistica],
+    summary="Obtener Top 5 deudores",
+    description=(
+        "Retorna los 5 predios/suscriptores con mayor saldo "
+        "de cartera pendiente, parcial o vencida."
+    ),
+)
+def obtener_top_deudores(
+    service: Annotated[
+        EstadisticasService,
+        Depends(get_estadisticas_service),
+    ],
+) -> list[DeudorEstadistica]:
+    try:
+        return service.obtener_top_deudores()
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "No fue posible consultar el top de deudores "
                 "en la base de datos."
             ),
         ) from error

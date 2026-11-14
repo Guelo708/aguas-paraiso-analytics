@@ -37,3 +37,20 @@ class ResumenEstadisticas(BaseModel):
         ge=0,
         description="Suma histórica de los pagos registrados.",
     )
+
+
+class DeudorEstadistica(BaseModel):
+    nombre: str = Field(
+        description="Nombre completo del suscriptor propietario del predio."
+    )
+    predio: str = Field(
+        description="Código o identificador del predio."
+    )
+    facturas: int = Field(
+        ge=1,
+        description="Cantidad de facturas pendientes, parciales o vencidas."
+    )
+    deuda: Decimal = Field(
+        ge=0,
+        description="Saldo total adeudado después de descontar abonos."
+    )
