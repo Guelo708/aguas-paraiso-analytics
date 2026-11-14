@@ -54,3 +54,25 @@ class DeudorEstadistica(BaseModel):
         ge=0,
         description="Saldo total adeudado después de descontar abonos."
     )
+
+
+class CarteraSectorEstadistica(BaseModel):
+    sector: str = Field(
+        description="Nombre del sector o vereda."
+    )
+    cartera_vencida: Decimal = Field(
+        ge=0,
+        description="Saldo en pesos de facturas con estado VENCIDA en el sector."
+    )
+    cartera_pendiente: Decimal = Field(
+        ge=0,
+        description="Saldo en pesos de facturas PENDIENTE o PARCIAL en el sector."
+    )
+    total_cartera: Decimal = Field(
+        ge=0,
+        description="Suma de cartera vencida y pendiente en el sector."
+    )
+    facturas_con_saldo: int = Field(
+        ge=0,
+        description="Cantidad de facturas con saldo pendiente en el sector."
+    )

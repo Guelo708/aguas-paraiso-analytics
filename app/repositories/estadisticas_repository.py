@@ -205,3 +205,82 @@ class EstadisticasRepository:
             }
             for row in resultados
         ]
+
+    def obtener_cartera_por_sector(self) -> list[dict[str, Any]]:
+        consulta = text(
+            """
+            WITH pagos_por_factura AS (
+                SELECT
+                    factura_id,
+                    COALESCE(SUM(valor_pagado), 0) AS total_pagado
+                FROM pagos
+                GROUP BY factura_id
+            ),
+            deuda_facturas AS (
+                SELECT
+                    f.predio_id,
+                    f.estado,
+                    GREATEST(
+                        f.valor_factura - COALESCE(ppf.total_pagado, 0),
+                        0
+                    ) AS saldo
+                FROM facturas f
+                LEFT JOIN pagos_por_factura ppf
+                    ON ppf.factura_id = f.id
+                WHERE f.estado IN ('PENDIENTE', 'PARCIAL', 'VENCIDA')
+            )
+            SELECT
+                COALESCE(s.nombre, 'Sin sector') AS sector,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN df.estado = 'VENCIDA'
+                            THEN df.saldo
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS cartera_vencida,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN df.estado IN ('PENDIENTE', 'PARCIAL')
+                            THEN df.saldo
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS cartera_pendiente,
+                COALESCE(SUM(df.saldo), 0) AS total_cartera,
+                COUNT(df.predio_id) FILTER (WHERE df.saldo > 0) AS facturas_con_saldo
+            FROM sectores s
+            LEFT JOIN predios p
+                ON p.sector_id = s.id
+            LEFT JOIN deuda_facturas df
+                ON df.predio_id = p.id
+            GROUP BY s.id, s.nombre
+            ORDER BY total_cartera DESC, s.nombre ASC
+            """
+        )
+
+        with self._engine.connect() as connection:
+            connection.execute(
+                text("SET TRANSACTION READ ONLY")
+            )
+
+            resultados = connection.execute(
+                consulta
+            ).mappings().all()
+
+            connection.rollback()
+
+        return [
+            {
+                "sector": str(row["sector"]),
+                "cartera_vencida": Decimal(row["cartera_vencida"] or 0),
+                "cartera_pendiente": Decimal(row["cartera_pendiente"] or 0),
+                "total_cartera": Decimal(row["total_cartera"] or 0),
+                "facturas_con_saldo": int(row["facturas_con_saldo"] or 0),
+            }
+            for row in resultados
+        ]

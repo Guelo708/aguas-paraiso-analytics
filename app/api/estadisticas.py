@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.dependencies import get_estadisticas_service
 from app.schemas.estadisticas import (
+    CarteraSectorEstadistica,
     DeudorEstadistica,
     ResumenEstadisticas,
 )
@@ -68,6 +69,33 @@ def obtener_top_deudores(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
                 "No fue posible consultar el top de deudores "
+                "en la base de datos."
+            ),
+        ) from error
+
+
+@router.get(
+    "/cartera/sectores",
+    response_model=list[CarteraSectorEstadistica],
+    summary="Obtener cartera vencida y pendiente por sector",
+    description=(
+        "Agrupa el saldo de cartera vencida y pendiente/parcial "
+        "por cada sector registrado."
+    ),
+)
+def obtener_cartera_por_sector(
+    service: Annotated[
+        EstadisticasService,
+        Depends(get_estadisticas_service),
+    ],
+) -> list[CarteraSectorEstadistica]:
+    try:
+        return service.obtener_cartera_por_sector()
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "No fue posible consultar la cartera por sector "
                 "en la base de datos."
             ),
         ) from error

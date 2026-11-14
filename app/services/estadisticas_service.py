@@ -2,6 +2,7 @@
     EstadisticasRepository,
 )
 from app.schemas.estadisticas import (
+    CarteraSectorEstadistica,
     DeudorEstadistica,
     ResumenEstadisticas,
 )
@@ -24,5 +25,13 @@ class EstadisticasService:
 
         return [
             DeudorEstadistica.model_validate(item)
+            for item in resultados
+        ]
+
+    def obtener_cartera_por_sector(self) -> list[CarteraSectorEstadistica]:
+        resultados = self._repository.obtener_cartera_por_sector()
+
+        return [
+            CarteraSectorEstadistica.model_validate(item)
             for item in resultados
         ]
